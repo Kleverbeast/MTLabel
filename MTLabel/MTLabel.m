@@ -52,7 +52,8 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
 @synthesize delegate;
 @synthesize _adjustSizeToFit;
 @synthesize shadowOffset;
-
+@synthesize hasShadow;
+@synthesize activeColor, inactiveColor;
 
 #pragma mark - Setters
 
@@ -63,7 +64,7 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
         
         _numberOfLines = numberOfLines;
         [self setNeedsDisplay];
-    
+		
     }
 }
 
@@ -73,12 +74,12 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
         
         _lineHeight = lineHeight;
         [self setNeedsDisplay];
-
+		
     }
 }
 
 -(void)setText:(NSString *)text {
-      
+	
     if (text != _text) {
         
         if (_text) {
@@ -89,13 +90,13 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
         
         _text = [text retain];
         [self setNeedsDisplay];
-
+		
     }
 }
 
 
 -(void)setFont:(UIFont *)font {
-
+	
     if (font != _font) {
         
         if (_font) {
@@ -112,6 +113,13 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
     }
 }
 
+- (void)activate {
+    [self setFontColor:activeColor];
+}
+
+- (void)deactivate {
+    [self setFontColor:inactiveColor];
+}
 
 -(void)setFontColor:(UIColor *)fontColor {
     
@@ -129,6 +137,7 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
     }
     
 }
+
 - (void)setFontHighlightColor:(UIColor *)fontHighlightColor {
     if (fontHighlightColor != _fontHighlightColor) {
         if (_fontHighlightColor) {
@@ -227,7 +236,7 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
     _textHeight = 0;
     self._font = [UIFont systemFontOfSize:DEFAULT_FONT_SIZE];
     self._lineHeight = _font.lineHeight;
-    self._textAlignment = MTLabelTextAlignmentLeft;      
+    self._textAlignment = MTLabelTextAlignmentLeft;
     [self setOpaque:NO];
 }
 -(id)init {
@@ -236,7 +245,7 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
     
     if (self) {
         [self setup];
-    }    
+    }
     return self;
 }
 
@@ -280,9 +289,9 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
 }
 
 +(id)label {
-
+	
     return [[[MTLabel alloc] init] autorelease];
-
+	
 }
 
 +(id)labelWithFrame:(CGRect)frame andText:(NSString *)text {
@@ -332,7 +341,7 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
             x = 0;
             break;
     }
-
+	
     return x;
 }
 - (void)drawTextInRect:(CGRect)rect inContext:(CGContextRef)context {
@@ -342,8 +351,8 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
     }
     
     //Create a CoreText font object with name and size from the UIKit one
-    CTFontRef font = CTFontCreateWithName((CFStringRef)_font.fontName , 
-                                          _font.pointSize, 
+    CTFontRef font = CTFontCreateWithName((CFStringRef)_font.fontName ,
+                                          _font.pointSize,
                                           NULL);
     
     //Setup the attributes dictionary with font and color
@@ -352,8 +361,8 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
                                 _fontColor.CGColor, kCTForegroundColorAttributeName,
                                 nil];
     
-    NSAttributedString *attributedString = [[[NSAttributedString alloc] 
-                                             initWithString:_text 
+    NSAttributedString *attributedString = [[[NSAttributedString alloc]
+                                             initWithString:_text
                                              attributes:attributes] autorelease];
     
     CFRelease(font);
@@ -369,13 +378,13 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
     CFIndex currentIndex = 0;
     
     _textHeight = 0;
-
+	
     //Start drawing lines until we run out of text
     while (shouldDrawAlong) {
         
         //Get CoreText to suggest a proper place to place the line break
-        CFIndex lineLength = CTTypesetterSuggestLineBreak(typeSetter, 
-                                                          currentIndex, 
+        CFIndex lineLength = CTTypesetterSuggestLineBreak(typeSetter,
+                                                          currentIndex,
                                                           self.bounds.size.width);
         
         //Create a new line with from current index to line-break index
@@ -392,7 +401,7 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
         }
         
         CGFloat x = [self textOffsetForLine:line inRect:self.bounds];
-                
+		
         // Draw highlight if color has been set
         if (_fontHighlightColor != nil) {
             CGContextSetFillColorWithColor(context, _fontHighlightColor.CGColor);
@@ -401,29 +410,29 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
             lineRect = CGRectIntegral(lineRect);
             lineRect = CGRectInset(lineRect, -1, -1);
             lineRect.origin.y -= 1;
-
+			
             NSString *substring = [_text substringWithRange:NSMakeRange(lineRange.location, lineRange.length)];
-
+			
             substring = [substring stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
             if (0 < [substring length]) {
-
+				
                 CGContextFillRect(context, lineRect);
             }
         }
         //Setup the line position
         CGContextSetTextPosition(context, x, y);
         CTLineDraw(line, context);
-                
+		
         //Check to see if our index didn't exceed the text, and if should limit to number of lines
         if ((currentIndex + lineLength >= [_text length]) &&
-            !(_limitToNumberOfLines && count < _numberOfLines-1) )    {    
+            !(_limitToNumberOfLines && count < _numberOfLines-1) )    {
             shouldDrawAlong = NO;
             
         }
         
         count++;
         CFRelease(line);
-
+		
         CGFloat minFontSizeChange = 1;
         y -= _lineHeight;
         
@@ -431,7 +440,7 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
         _textHeight  += _lineHeight;
         
         if (_adjustSizeToFit && _font.pointSize > _minimumFontSize) {
-
+			
             if (self.bounds.size.height < _textHeight) {
                 
                 NSString *fontName = _font.fontName;
@@ -444,41 +453,43 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
                 
                 self._font = [UIFont fontWithName:fontName size:newPointSize];
                 self._lineHeight = roundf(newPointSize * lineHeightRatio);
-
+				
                 CGContextClearRect(context, self.bounds);
                 CFRelease(typeSetter);
-
+				
                 return [self drawTextInRect:self.bounds inContext:context];
             }
         }
     }
     
     CFRelease(typeSetter);
-
+	
 }
 - (void)drawRect:(CGRect)rect {
-
-    CGContextRef context = UIGraphicsGetCurrentContext();    
-
+	
+    CGContextRef context = UIGraphicsGetCurrentContext();
+	
     //Grab the drawing context and flip it to prevent drawing upside-down
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);
     CGContextTranslateCTM(context, 0, self.bounds.size.height);
     CGContextScaleCTM(context, 1.0, -1.0);
     
     CGContextSaveGState(context);
-
-    CGColorRef colorRef = CGColorCreate(CGColorSpaceCreateDeviceRGB(), CGColorGetComponents([_fontColor CGColor]));
-    CGContextSetShadowWithColor(context, CGSizeMake(self.shadowOffset, self.shadowOffset), 5, colorRef);
-    CGColorRelease(colorRef);
-	
+    
+    if(hasShadow) {
+        CGColorRef colorRef = CGColorCreate(CGColorSpaceCreateDeviceRGB(), CGColorGetComponents([_fontColor CGColor]));
+        CGContextSetShadowWithColor(context, CGSizeMake(self.shadowOffset, self.shadowOffset), 5, colorRef);
+        CGColorRelease(colorRef);
+    }
+    
     [self drawTextInRect:rect inContext:context];
     
     
     if (_shouldResizeToFit && self.frame.size.height < _textHeight) {
         
-        [self setFrame:CGRectMake(self.frame.origin.x, 
-                                  self.frame.origin.y, 
-                                  self.frame.size.width, 
+        [self setFrame:CGRectMake(self.frame.origin.x,
+                                  self.frame.origin.y,
+                                  self.frame.size.width,
                                   _textHeight)];
         
         // Notify delegate that we did change frame
@@ -489,7 +500,7 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
     }
     CGContextRestoreGState(context);
     [super drawRect:self.bounds];
-} 
+}
 
 
 #pragma mark - Memory managment

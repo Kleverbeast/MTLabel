@@ -60,9 +60,14 @@ typedef enum {
 @property (nonatomic, readwrite, setter = setTextAlignment:, getter = textAlignment) MTLabelTextAlignment _textAlignment;
 @property (nonatomic, assign) id<MTLabelDelegate> delegate;
 @property (nonatomic, readwrite, setter = setAdjustSizeToFit:, getter = adjustSizeToFit) BOOL _adjustSizeToFit;
+@property (nonatomic, assign) BOOL hasShadow;
 
 @property (nonatomic, readwrite) CGFloat shadowOffset;
+@property (nonatomic, strong) UIColor *activeColor;
+@property (nonatomic, strong) UIColor *inactiveColor;
 
+-(void)activate;
+-(void)deactivate;
 -(id)initWithFrame:(CGRect)frame andText:(NSString *)text;
 -(id)initWithText:(NSString *)text;
 +(id)label;
