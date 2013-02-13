@@ -346,10 +346,10 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
 }
 - (void)drawTextInRect:(CGRect)rect inContext:(CGContextRef)context {
     
-    if (!_text) {
+    if (!_text || !_font) {
         return;
     }
-    
+	
     //Create a CoreText font object with name and size from the UIKit one
     CTFontRef font = CTFontCreateWithName((CFStringRef)_font.fontName ,
                                           _font.pointSize,
@@ -452,7 +452,7 @@ CGRect CTLineGetTypographicBoundsAsRect(CTLineRef line, CGPoint lineOrigin) {
                 newPointSize = newPointSize < _minimumFontSize ? _minimumFontSize : newPointSize;
                 
                 self._font = [UIFont fontWithName:fontName size:newPointSize];
-                self._lineHeight = roundf(newPointSize * lineHeightRatio);
+                self._lineHeight = roundf(newPointSize * lineHeightRatio); 
 				
                 CGContextClearRect(context, self.bounds);
                 CFRelease(typeSetter);
